@@ -45,6 +45,9 @@ parser.add_argument('-R', '--hard-attach', dest='hardtach', action='store_true',
 parser.add_argument('-f', '--force', dest='force', action='store_true',
         default=False,
         help="Force any action which normally refuses")
+parser.add_argument('-G', '--get', dest="get", action='store_true',
+        default=False,
+        help="Get the target window and bring it here")
 
 class TMuxInfo(object):
     """This is the master class that will replace our broken toplevel"""
@@ -336,6 +339,9 @@ def searched(args):
     # TODO Expand
     return args.search or args.searchpty
 
+def in_tmux():
+    return "TMUX" in os.environ
+
 def check_args(args):
     if args.attach and not searched(args):
         throw_error("You cannot attach without searching")
@@ -353,20 +359,29 @@ def main():
         tinfo.dump_func = dump
 
     tinfo.build()
+    if args.get:
+        if not in_tmux() and not args.force:
+            throw_error("Can only get sessions from inside tmux")
     if args.search:
         tinfo.search(' '.join(args.search))
     if args.reattach:
         tinfo.filter('sessions', 'detached', 'True')
     if args.searchpty:
         tinfo.search(args.searchpty, field='pty')
-    if args.attach:
+    if args.attach or args.get:
         session_ids = tinfo.get_session_ids()
         if len(session_ids) != 1 and not args.force:
+            print(session_ids)
             throw_error("You must have exactly one result to attach (%i found)"
                     % (tinfo.count_sessions()))
         else:
             for i in session_ids:
-                os.execvpe('tmux', ('tmux', 'a', '-t', str(i)), os.environ)
+                # This is a hack to only retrieve the first. Called once.
+                if args.attach:
+                    os.execvpe('tmux', ('tmux', 'a', '-t', str(i)), os.environ)
+                elif args.get:
+                    # FIXME hax
+                    os.execvpe('tmux', ('tmux', 'move-window', '-s', str(i)+":"+args.search[0]), os.environ)
     else:
         tinfo.dump()
 
