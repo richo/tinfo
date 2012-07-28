@@ -38,13 +38,7 @@ class TMuxInfo(object):
         self.output = sys.stdout
         self.verbose = False
         self.dump_func = repr
-        if not ph:
-            p = sp.Popen(["tmux", "info"], bufsize=512,
-                              stdin=None, stdout=sp.PIPE, stderr=sp.PIPE, close_fds=True)
-            self.ph = Watcher(p.stdout)
-            self.stderr = p.stderr
-        else:
-            self.ph = Watcher(ph)
+        self.ph = get_tmux_info_watcher()
     def out(self, msg):
         print >>self.output, msg
 
@@ -284,6 +278,10 @@ class Client(IndexData):
 class Pane(IndexData):
     pass
 
+def get_tmux_info_watcher():
+    p = sp.Popen(["tmux", "info"], bufsize=512,
+                      stdin=None, stdout=sp.PIPE, stderr=sp.PIPE, close_fds=True)
+    return Watcher(p.stdout)
 
 class Watcher(object):
     def __init__(self, ph):
