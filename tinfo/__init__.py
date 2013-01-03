@@ -32,13 +32,17 @@ class TMuxInfo(object):
     sess_header_keys = ('sessno', 'sessname', 'nowins', 'created', 'sizex', 'sizey', 'flags')
     client_ind1_re = re.compile('\s*(\d+): (.*) \(\d+, \d+\): (\d+) \[(\d+)x(\d+) (.*)\] \[flags=(.*), references=(.*)]')
     client_ind1_keys = ('idx', 'pty', 'sessno', 'sizex', 'sizey', 'term', 'flags', 'references')
+
     def __init__(self, ph=None):
-        self.handlers = { "Clients": self.handle_clients,
-                 "Sessions": self.handle_sessions }
+        self.handlers = {
+                "Clients": self.handle_clients,
+                "Sessions": self.handle_sessions
+            }
         self.output = sys.stdout
         self.verbose = False
         self.dump_func = repr
         self.ph = get_tmux_info_watcher()
+
     def out(self, msg):
         print >>self.output, msg
 
@@ -93,12 +97,14 @@ class TMuxInfo(object):
             setattr(dat, key, val)
         return dat
     #}}}
+
     def parse_session_ind3(self, line): # {{{
         dat = Data()
         for key, val in zip(self.sess_ind3_keys, self.sess_ind3_re.match(line).groups()):
             setattr(dat, key, val)
         return dat
     #}}}
+
     def parse_session_ind5(self, line): # {{{
         dat = Data()
         for key, val in zip(self.sess_ind5_keys, self.sess_ind5_re.match(line).groups()):
@@ -123,6 +129,7 @@ class TMuxInfo(object):
             except:
                 raise
         self.sessions = data
+
     def count_sessions(self):
         return len(self.sessions)
 
@@ -142,11 +149,13 @@ class TMuxInfo(object):
             keys.sort()
             for j in keys:
                 self.out("%s: %s" % (j, self.dump_func(ival.wins[j])))
+
     def filter(self, attr, key, value):
         for i in getattr(self, attr):
             if getattr(i, key) != value:
                 # Dump that item
                 pass
+
     def search(self, searchTerm, field='name'):
         s = self.sessions
         c = self.clients
@@ -173,9 +182,9 @@ class TMuxInfo(object):
             if not ival.is_empty():
                 valid_sessions[i] = ival
         self.sessions = valid_sessions
+
     def get_session_ids(self):
         return [i for i in self.sessions]
-
 
 
 def _looks_like_size(l):
@@ -183,10 +192,15 @@ def _looks_like_size(l):
         return l[0] == "[" and l[-1] == "]"
     else:
         return False
+
+
 def dump(obj):
     return obj.__dump__()
+
+
 def dump_verbose(obj):
     return obj.__dump_verbose__()
+
 
 def get_indent(line):
     """Get the indent of the line, then strip it and return both"""
@@ -195,49 +209,64 @@ def get_indent(line):
         c += 1
     return c, line[c:]
 
+
 class Data(object):
-    type_mapping = {'sessno': int,
-                    'winno': int,
-                    'paneno': int,
-                    'sizex': int,
-                    'sizey': int,
-                    'references': int,
-                    'idx': int,
-                    'panes': int,
-                    'pty': str}
+    type_mapping = {
+            'sessno': int,
+            'winno': int,
+            'paneno': int,
+            'sizex': int,
+            'sizey': int,
+            'references': int,
+            'idx': int,
+            'panes': int,
+            'pty': str
+        }
+
     def __setattr__(self, key, value):
         if key in self.type_mapping:
             dict.__setattr__(self, key, self.type_mapping[key](value))
         else:
             dict.__setattr__(self, key, value)
+
     def iteritems(self):
         return self.__dict__.iteritems()
+
     def __repr__(self):
         return repr(self.__dict__)
+
 
 class IndexData(object):
     def __init__(self, data):
         for key, value in data.iteritems():
             self.__setattr__(key, value)
+
     def __dump__(self):
         return repr(self)
+
+
 class Session(IndexData):
     def __init__(self, *args):
         self.wins = {}
         self.detached = True
         IndexData.__init__(self, *args)
+
     def add_win(self, dat):
         self.wins[dat.winno] = Win(dat)
         return self.wins[dat.winno]
+
     def del_win(self, idx):
         del self.wins[idx]
+
     def is_empty(self):
         if len(self.wins):
             return False
         return True
+
     def __repr__(self):
         """Primarily debugging"""
         return "%s: %s" % (self.sessno, repr(self.wins))
+
 
 def plural(noun, count):
     if count > 1:
@@ -247,47 +276,57 @@ def plural(noun, count):
     else:
         return noun
 
+
 class Win(IndexData):
     def __init__(self, *args):
         self.panes = []
         self.pty = ''
         IndexData.__init__(self, *args)
+
     def __repr__(self):
         """Primarily debugging"""
         info = [self.name]
         if self.panes > 1:
             info.append("(%i %s) %s" % (len(self.panes), plural("pane", len(self.panes)), self.pty))
         return " ".join(info)
+
     def add_pane(self, dat):
         self.panes.append(Pane(dat))
         self.pty = ' '.join([i.pty for i in self.panes])
+
     def __dump_verbose__(self):
         return "%s [%sx%s] (%i panes) containing %s" % (
                 self.name, self.sizex, self.sizey,
                 len(self.panes), self.pty)
 
+
 class Client(IndexData):
     def __repr__(self):
         """Primarily debugging"""
         return "%s" % (self.pty)
+
     def __dump_verbose__(self):
-        return "%s%s-> %s [%sx%s] [%s]" % ( os.linesep,
+        return "%s%s-> %s [%sx%s] [%s]" % (os.linesep,
                 self.pty, self.idx, self.sizex, self.sizey,
                 self.term)
 
+
 class Pane(IndexData):
     pass
+
 
 def get_tmux_info_watcher():
     p = sp.Popen(["tmux", "info"], bufsize=512,
                       stdin=None, stdout=sp.PIPE, stderr=sp.PIPE, close_fds=True)
     return Watcher(p.stdout)
 
+
 class Watcher(object):
     def __init__(self, ph):
         # Ensure iterator is implemented
         self.ph = ph
         self.next()
+
     def next(self):
         if self.ph:
             self.line = self.ph.readline()
@@ -297,21 +336,27 @@ class Watcher(object):
             return self.line
         else:
             return None
+
     def __bool__(self):
         return bool(self.line)
+
     def __nonzero__(self):
         return bool(self.line)
+
 
 def throw_error(msg, status=1):
     print >>sys.stderr, msg
     exit(status)
 
+
 def searched(args):
     # TODO Expand
     return args.search or args.searchpty
 
+
 def in_tmux():
     return "TMUX" in os.environ
+
 
 def check_args(args):
     if args.attach and not searched(args):
@@ -319,6 +364,7 @@ def check_args(args):
     if args.reattach:
         args.attach = True
         args.force = True
+
 
 def _build_parser():
     #{{{ Argument Parsing
@@ -396,4 +442,3 @@ if __name__ == "__main__":
         main()
     except NoTmuxError as error:
         throw_error(error.MSG(), error.STATUS())
-
