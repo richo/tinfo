@@ -320,7 +320,40 @@ def check_args(args):
         args.attach = True
         args.force = True
 
+def _build_parser():
+    #{{{ Argument Parsing
+    parser = argparse.ArgumentParser(description="Parse and display tmux info data")
+    # Make this the default args I Think
+    parser.add_argument('search', metavar='search terms', action='store',
+            default=None, nargs='*',
+            help="Search for <string> in window names")
+    parser.add_argument('-v', '--verbose', dest='verbose', action='store_true',
+            default=False,
+            help="Enable verbose reporting (show full data)")
+    parser.add_argument('-a', '--attach', dest='attach', action='store_true',
+            default=False,
+            help="Attach to the session, if your search results only return one")
+    parser.add_argument('-p', '--pty', dest='searchpty', action='store',
+            default=None,
+            help="Search for a given {p,t}ty amongst those owned by windows")
+    parser.add_argument('-r', '--reattach', dest='reattach', action='store_true',
+            default=None,
+            help="Reattach to the first session we find that's detached")
+    parser.add_argument('-R', '--hard-attach', dest='hardtach', action='store_true',
+            default=None,
+            help="Do what we've got to do to get a session")
+    parser.add_argument('-f', '--force', dest='force', action='store_true',
+            default=False,
+            help="Force any action which normally refuses")
+    parser.add_argument('-G', '--get', dest="get", action='store_true',
+            default=False,
+            help="Get the target window and bring it here")
+    return parser
+    #}}}
+
+
 def main():
+    parser = _build_parser()
     args = parser.parse_args()
     check_args(args)
     tinfo = TMuxInfo()
@@ -359,35 +392,6 @@ def main():
 
 # FINAL
 if __name__ == "__main__":
-    #{{{ Argument Parsing
-    parser = argparse.ArgumentParser(description="Parse and display tmux info data")
-    # Make this the default args I Think
-    parser.add_argument('search', metavar='search terms', action='store',
-            default=None, nargs='*',
-            help="Search for <string> in window names")
-    parser.add_argument('-v', '--verbose', dest='verbose', action='store_true',
-            default=False,
-            help="Enable verbose reporting (show full data)")
-    parser.add_argument('-a', '--attach', dest='attach', action='store_true',
-            default=False,
-            help="Attach to the session, if your search results only return one")
-    parser.add_argument('-p', '--pty', dest='searchpty', action='store',
-            default=None,
-            help="Search for a given {p,t}ty amongst those owned by windows")
-    parser.add_argument('-r', '--reattach', dest='reattach', action='store_true',
-            default=None,
-            help="Reattach to the first session we find that's detached")
-    parser.add_argument('-R', '--hard-attach', dest='hardtach', action='store_true',
-            default=None,
-            help="Do what we've got to do to get a session")
-    parser.add_argument('-f', '--force', dest='force', action='store_true',
-            default=False,
-            help="Force any action which normally refuses")
-    parser.add_argument('-G', '--get', dest="get", action='store_true',
-            default=False,
-            help="Get the target window and bring it here")
-    #}}}
-
     try:
         main()
     except NoTmuxError as error:
