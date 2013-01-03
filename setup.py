@@ -7,7 +7,7 @@ Package information for tinfo package.
 
 from setuptools import setup
 
-VERSION = '0.0.0'
+VERSION = '0.0.1'
 
 requires = [
     ]
