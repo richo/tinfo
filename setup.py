@@ -15,7 +15,7 @@ requires = [
 setup(
         name='tinfo',
         description="Console extension to tmux",
-        long_description=open('README.md').read(),
+        long_description=open('README.rst').read(),
         url="https://github.com/richo/tinfo",
         version=VERSION,
         author="Richo Healey",
