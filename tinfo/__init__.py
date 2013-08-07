@@ -24,8 +24,8 @@ class NoTmuxError(Exception):
 
 class TMuxInfo(object):
     """This is the master class that will replace our broken toplevel"""
-    sess_ind5_re = re.compile("\s*(\d+): (.*) (\d+) (\d+) (\d+)/(\d+), (\d+) bytes; (.*) (\d+)/(\d+), (\d+) bytes")
-    sess_ind5_keys = ('paneno', 'pty', 'dump', 'dump', 'dump', 'dump', 'dump', 'encoding', 'dump', 'dump')
+    sess_ind5_re = re.compile("\s*(\d+): (.*) (\d+) (\d+) (\d+)/(\d+), (\d+) bytes")
+    sess_ind5_keys = ('paneno', 'pty', 'dump', 'dump', 'dump', 'dump', 'dump')
     sess_ind3_re = re.compile("\s*(\d+): (.*) \[(\d+)x(\d+)\] \[flags=(.*), references=(\d+), last layout=(.*)\]")
     sess_ind3_keys = ('winno', 'name', 'sizex', 'sizey', 'flags', 'references', 'last_layout')
     sess_header_re = re.compile("\s*(\d+): (.+): (\d+) windows \(created (.*)\) \[(\d+)x(\d+)\] \[flags=(.*)\]")
