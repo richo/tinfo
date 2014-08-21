@@ -134,9 +134,6 @@ def main():
     args = parser.parse_args()
     tmux = Tmux(get_tmux_info_pipe())
 
-    if args.get:
-        if not in_tmux() and not args.force:
-            throw_error("Can only get sessions from inside tmux")
     if args.search:
         tmux.search(' '.join(args.search))
     if args.get:
@@ -152,7 +149,6 @@ def main():
             tmux.pretty_format(sys.stdout)
 
 
-# FINAL
 if __name__ == "__main__":
     try:
         main()
