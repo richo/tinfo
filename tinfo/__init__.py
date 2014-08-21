@@ -51,6 +51,20 @@ class Tmux(object):
             for client in clients:
                 pipe.write("  %d: %s\n" % (client.idx, client.title))
 
+    def only_session_id(self):
+        keys = self.sessions.keys()
+        assert len(keys) == 1
+        return keys[0]
+
+    def only_session(self):
+        session_id = self.only_session_id()
+        return self.sessions[session_id]
+
+    def only_client(self):
+        session = get_one_session(tmux)
+        assert len(session) == 1
+        client = session[0]
+
 def _looks_like_size(l):
     if l:
         return l[0] == "[" and l[-1] == "]"
@@ -87,14 +101,6 @@ def get_tmux_info_pipe():
 def in_tmux():
     return "TMUX" in os.environ
 
-def check_args(args):
-    if args.attach and not searched(args):
-        throw_error("You cannot attach without searching")
-    if args.reattach:
-        args.attach = True
-        args.force = True
-
-
 def _build_parser():
     #{{{ Argument Parsing
     parser = argparse.ArgumentParser(description="Parse and display tmux info data")
@@ -114,11 +120,9 @@ def _build_parser():
     return parser
     #}}}
 
-
 def main():
     parser = _build_parser()
     args = parser.parse_args()
-    check_args(args)
     tmux = Tmux(get_tmux_info_pipe())
 
     if args.get:
@@ -127,15 +131,11 @@ def main():
     if args.search:
         tmux.search(' '.join(args.search))
     if args.get:
-        # Assert there's only one session
-        keys = tmux.sessions.keys()
-        assert len(keys) == 1
-        session = tmux.sessions[keys[0]]
-        assert len(session) == 1
-        client = session[0]
-        #i print repr(('tmux', ('tmux', 'move-window', '-s', str(client.idx)+":"+args.search[0])))
+        client = tmux.only_client()
         os.execvp('tmux', ('tmux', 'move-window', '-s', '%d:%d' % (keys[0], client.idx)))
-
+    elif args.attach:
+        session = tmux.only_session_id()
+        os.execvp('tmux', ('tmux', 'attach-session', '-t', '%d' % (session)))
     else:
         tmux.pretty_format(sys.stdout)
 
