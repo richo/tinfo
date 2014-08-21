@@ -1,13 +1,6 @@
 #!/usr/bin/env python
-# Rich Healey '11 all rights reserved
-# Released under GPLv2 or WTFPL at your option
-#
-# TODO
-# - Get yo feature bloat on, colors if we're attached to a TTY
-# - port to ruby
-# - More attractive visually
-# - More intuitive options
-
+# Richo Healey 11-14
+# Licensed under the terms of the MIT License
 
 import os
 import sys
