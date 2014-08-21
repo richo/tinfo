@@ -51,6 +51,12 @@ class Tmux(object):
             for client in clients:
                 pipe.write("  %d: %s\n" % (client.idx, client.title))
 
+    def verbose_format(self, pipe):
+        for idx, clients in self.sessions.iteritems():
+            pipe.write("Session %d\n" % (idx))
+            for client in clients:
+                pipe.write("  %d: %s\n" % (client.idx, repr(client)))
+
     def only_session_id(self):
         keys = self.sessions.keys()
         assert len(keys) == 1
@@ -89,6 +95,9 @@ class Data(object):
             dict.__setattr__(self, key, self.type_mapping[key](value))
         else:
             dict.__setattr__(self, key, value)
+
+    def __repr__(self):
+        return repr(dict(self.iteritems()))
 
     def iteritems(self):
         return self.__dict__.iteritems()
@@ -137,7 +146,10 @@ def main():
         session = tmux.only_session_id()
         os.execvp('tmux', ('tmux', 'attach-session', '-t', '%d' % (session)))
     else:
-        tmux.pretty_format(sys.stdout)
+        if args.verbose:
+            tmux.verbose_format(sys.stdout)
+        else:
+            tmux.pretty_format(sys.stdout)
 
 
 # FINAL
