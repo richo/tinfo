@@ -59,10 +59,13 @@ class Tmux(object):
         session_id = self.only_session_id()
         return self.sessions[session_id]
 
+    def only_client_id(self):
+        return self.only_client().idx
+
     def only_client(self):
-        session = get_one_session(tmux)
+        session = self.only_session()
         assert len(session) == 1
-        client = session[0]
+        return session[0]
 
 def _looks_like_size(l):
     if l:
@@ -130,8 +133,9 @@ def main():
     if args.search:
         tmux.search(' '.join(args.search))
     if args.get:
-        client = tmux.only_client()
-        os.execvp('tmux', ('tmux', 'move-window', '-s', '%d:%d' % (keys[0], client.idx)))
+        session = tmux.only_session_id()
+        client = tmux.only_client_id()
+        os.execvp('tmux', ('tmux', 'move-window', '-s', '%d:%d' % (session, client)))
     elif args.attach:
         session = tmux.only_session_id()
         os.execvp('tmux', ('tmux', 'attach-session', '-t', '%d' % (session)))
